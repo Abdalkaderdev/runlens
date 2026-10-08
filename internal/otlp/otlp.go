@@ -1,11 +1,15 @@
-// Package otlp receives OTLP trace exports over HTTP (protobuf) and gRPC.
+// Package otlp receives OTLP trace exports over HTTP (protobuf or JSON) and gRPC.
 package otlp
 
 import (
 	"compress/gzip"
 	"context"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"io"
+	"mime"
 	"net"
 	"net/http"
 
@@ -14,6 +18,7 @@ import (
 	common "go.opentelemetry.io/proto/otlp/common/v1"
 	trace "go.opentelemetry.io/proto/otlp/trace/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -112,14 +117,16 @@ func value(v *common.AnyValue) any {
 
 const maxBody = 32 << 20
 
-// ServeHTTP handles POST /v1/traces with an application/x-protobuf body.
+// ServeHTTP handles POST /v1/traces with a protobuf or JSON body.
 func (rc *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	if ct := r.Header.Get("Content-Type"); ct != "" && ct != "application/x-protobuf" {
-		http.Error(w, "runlens accepts OTLP http/protobuf; set OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf", http.StatusUnsupportedMediaType)
+	ct, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	isJSON := ct == "application/json"
+	if !isJSON && ct != "" && ct != "application/x-protobuf" {
+		http.Error(w, "unsupported content type "+ct, http.StatusUnsupportedMediaType)
 		return
 	}
 	var body io.Reader = http.MaxBytesReader(w, r.Body, maxBody)
@@ -138,14 +145,64 @@ func (rc *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req coltrace.ExportTraceServiceRequest
-	if err := proto.Unmarshal(b, &req); err != nil {
+	if isJSON {
+		err = UnmarshalJSON(b, &req)
+	} else {
+		err = proto.Unmarshal(b, &req)
+	}
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	rc.Ingest(&req)
+	if isJSON {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("{}"))
+		return
+	}
 	out, _ := proto.Marshal(&coltrace.ExportTraceServiceResponse{})
 	w.Header().Set("Content-Type", "application/x-protobuf")
 	w.Write(out)
+}
+
+// UnmarshalJSON decodes OTLP/JSON, whose trace and span IDs are hex strings
+// rather than the base64 that protojson expects for bytes fields.
+func UnmarshalJSON(b []byte, req *coltrace.ExportTraceServiceRequest) error {
+	var doc any
+	if err := json.Unmarshal(b, &doc); err != nil {
+		return err
+	}
+	if err := hexToBase64(doc); err != nil {
+		return err
+	}
+	b, _ = json.Marshal(doc)
+	return protojson.UnmarshalOptions{DiscardUnknown: true}.Unmarshal(b, req)
+}
+
+func hexToBase64(v any) error {
+	switch t := v.(type) {
+	case map[string]any:
+		for k, x := range t {
+			if s, ok := x.(string); ok && (k == "traceId" || k == "spanId" || k == "parentSpanId") {
+				raw, err := hex.DecodeString(s)
+				if err != nil {
+					return fmt.Errorf("%s: %w", k, err)
+				}
+				t[k] = base64.StdEncoding.EncodeToString(raw)
+				continue
+			}
+			if err := hexToBase64(x); err != nil {
+				return err
+			}
+		}
+	case []any:
+		for _, x := range t {
+			if err := hexToBase64(x); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // Discard accepts OTLP metrics and logs so exporters do not log errors.
