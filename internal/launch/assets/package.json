@@ -1,0 +1,9 @@
+{
+  "name": "runlens-node-instrumentation",
+  "private": true,
+  "dependencies": {
+    "@opentelemetry/auto-instrumentations-node": "0.81.0",
+    "@opentelemetry/instrumentation": "0.223.0",
+    "@opentelemetry/sdk-node": "0.223.0"
+  }
+}
