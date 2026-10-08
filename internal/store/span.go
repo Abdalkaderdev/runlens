@@ -98,6 +98,10 @@ func (s *Span) Classify(redact bool) {
 		if raw == "" {
 			raw = strings.TrimSpace(s.Str("db.operation.name", "db.operation") + " " + s.Str("db.collection.name", "db.mongodb.collection", "db.sql.table"))
 		}
+		if raw == "" {
+			s.Type = TypeInternal
+			return
+		}
 		s.Fingerprint = Normalize(raw)
 		s.Statement = raw
 		if redact {

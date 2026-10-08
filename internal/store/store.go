@@ -113,10 +113,14 @@ func (s *Store) Traces() [][]*Span {
 	return out
 }
 
+// Spans returns every span, oldest trace first, so that adding them to an
+// empty store reproduces the same trace order.
 func (s *Store) Spans() []*Span {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	var out []*Span
-	for _, t := range s.Traces() {
-		out = append(out, t...)
+	for _, id := range s.order {
+		out = append(out, s.traces[id].Spans...)
 	}
 	return out
 }

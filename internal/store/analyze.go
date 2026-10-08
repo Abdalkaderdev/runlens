@@ -267,7 +267,7 @@ func short(stmt string) string {
 }
 
 func (o Options) traceHints(req Request, spans []*Span) []string {
-	var h []string
+	h := []string{}
 	for _, f := range req.NPlusOne {
 		h = append(h, fmt.Sprintf("N+1: %q ran %d times (%.1f ms total). Batch it with one IN (...) query or a join.", short(f.Statement), f.Count, f.TotalMs))
 	}

@@ -125,7 +125,7 @@ func (s *Server) requests(w http.ResponseWriter, r *http.Request) {
 	}
 	out := []store.Request{}
 	for _, t := range s.Store.Traces() {
-		if req := s.Opt.Summarize(t); req.TraceID != "" {
+		if req := s.Opt.Summarize(t); req.Method != "" {
 			out = append(out, req)
 			if len(out) == limit {
 				break
@@ -183,7 +183,7 @@ func (s *Server) stream(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				req := s.Opt.Summarize(spans)
-				if req.TraceID == "" {
+				if req.Method == "" {
 					continue
 				}
 				b, _ := json.Marshal(req)
