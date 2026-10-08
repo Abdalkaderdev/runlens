@@ -276,7 +276,7 @@ func (o Options) traceHints(req Request, spans []*Span) []string {
 			h = append(h, fmt.Sprintf("Slow query (%.0f ms): %q", s.DurationMs(), short(s.Statement)))
 		}
 	}
-	if req.DurationMs > 0 && req.DBMs/req.DurationMs > 0.6 && req.DBCalls > 1 {
+	if req.DurationMs > o.SlowQueryMs/2 && req.DBMs/req.DurationMs > 0.6 && req.DBCalls > 1 {
 		h = append(h, fmt.Sprintf("%.0f%% of the request is spent in %d database calls.", 100*req.DBMs/req.DurationMs, req.DBCalls))
 	}
 	if n, hosts := sequentialExternal(spans); n >= 2 {
@@ -396,7 +396,7 @@ func (o Options) Endpoints(traces [][]*Span, since time.Time) []Endpoint {
 		for _, f := range e.NPlusOne {
 			e.Hints = append(e.Hints, fmt.Sprintf("N+1: %q runs up to %d times per request.", short(f.Statement), f.Count))
 		}
-		if e.DBShare > 0.6 {
+		if e.DBShare > 0.6 && (e.AvgDBCalls > 3 || e.P95Ms > o.SlowQueryMs) {
 			e.Hints = append(e.Hints, fmt.Sprintf("%.0f%% of time is spent in the database (%.1f calls per request).", e.DBShare*100, e.AvgDBCalls))
 		}
 		hs := make([]string, 0, len(a.hints))
