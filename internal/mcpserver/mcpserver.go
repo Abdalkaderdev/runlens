@@ -94,7 +94,7 @@ func New(src Source, opt store.Options, version string) *mcp.Server {
 					break
 				}
 			}
-			return nil, map[string]any{"requests": rows, "captured_traces": len(traces)}, nil
+			return nil, map[string]any{"requests": rows, "traces_in_buffer": len(traces)}, nil
 		})
 
 	mcp.AddTool(s, &mcp.Tool{Name: "get_trace", Annotations: ro, Description: "Full span tree for one request: every span with offset and duration, SQL statements, outbound calls, errors with stack traces, N+1 findings and hints."},
