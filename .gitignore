@@ -1,4 +1,4 @@
 /runlens
-/runlens.exe
+/runlens*.exe
 /dist/
 node_modules/
