@@ -80,7 +80,7 @@ func New(src Source, opt store.Options, version string) *mcp.Server {
 			rows := []Row{}
 			for _, t := range traces {
 				r := opt.Summarize(t)
-				if r.TraceID == "" || (in.ErrorsOnly && !r.Error) || r.DurationMs < in.MinDurationMs {
+				if r.Method == "" || (in.ErrorsOnly && !r.Error) || r.DurationMs < in.MinDurationMs {
 					continue
 				}
 				if in.Endpoint != "" && !contains(r.Endpoint()+" "+r.Path, in.Endpoint) {
