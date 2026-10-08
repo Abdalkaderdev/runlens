@@ -1,0 +1,14 @@
+{
+  "name": "bookshop",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "load": "node load.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "pg": "^8.23.1"
+  }
+}
