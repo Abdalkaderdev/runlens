@@ -3,6 +3,7 @@ const paths = [
   ['GET', '/api/authors'],
   ['GET', '/api/authors-fast'],
   ['GET', '/api/books/3'],
+  ['GET', '/api/books/7'],
   ['GET', '/api/books/999'],
   ['GET', '/api/packages/express'],
   ['GET', '/api/report'],

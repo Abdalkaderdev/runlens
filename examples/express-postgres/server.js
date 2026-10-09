@@ -1,5 +1,6 @@
 import express from 'express';
 import pg from 'pg';
+import Redis from 'ioredis';
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL ?? 'postgres://shop:shop@127.0.0.1:54329/shop',
@@ -21,6 +22,8 @@ async function seed() {
   }
 }
 
+const redis = new Redis(process.env.REDIS_URL ?? 'redis://127.0.0.1:63799');
+
 const app = express();
 app.use(express.json());
 
@@ -41,8 +44,12 @@ app.get('/api/authors-fast', async (_req, res) => {
 });
 
 app.get('/api/books/:id', async (req, res) => {
+  const key = `book:${req.params.id}`;
+  const cached = await redis.get(key);
+  if (cached) return res.json(JSON.parse(cached));
   const { rows } = await pool.query('SELECT * FROM books WHERE id = $1', [req.params.id]);
   if (!rows.length) return res.status(404).json({ error: 'not found' });
+  await redis.set(key, JSON.stringify(rows[0]), 'EX', 5);
   res.json(rows[0]);
 });
 
