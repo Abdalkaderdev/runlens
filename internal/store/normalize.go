@@ -13,8 +13,6 @@ var (
 	spaces = regexp.MustCompile(`\s+`)
 )
 
-// Normalize replaces string and numeric literals with ? and collapses IN and
-// VALUES lists, so the same query shape always yields the same fingerprint.
 func Normalize(q string) string {
 	var b strings.Builder
 	b.Grow(len(q))

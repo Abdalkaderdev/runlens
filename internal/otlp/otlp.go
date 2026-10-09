@@ -1,4 +1,3 @@
-// Package otlp receives OTLP trace exports over HTTP (protobuf or JSON) and gRPC.
 package otlp
 
 import (
@@ -117,7 +116,6 @@ func value(v *common.AnyValue) any {
 
 const maxBody = 32 << 20
 
-// ServeHTTP handles POST /v1/traces with a protobuf or JSON body.
 func (rc *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -165,8 +163,6 @@ func (rc *Receiver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(out)
 }
 
-// UnmarshalJSON decodes OTLP/JSON, whose trace and span IDs are hex strings
-// rather than the base64 that protojson expects for bytes fields.
 func UnmarshalJSON(b []byte, req *coltrace.ExportTraceServiceRequest) error {
 	var doc any
 	if err := json.Unmarshal(b, &doc); err != nil {
@@ -205,7 +201,6 @@ func hexToBase64(v any) error {
 	return nil
 }
 
-// Discard accepts OTLP metrics and logs so exporters do not log errors.
 func Discard(w http.ResponseWriter, r *http.Request) {
 	io.Copy(io.Discard, io.LimitReader(r.Body, maxBody))
 	w.Header().Set("Content-Type", "application/x-protobuf")
@@ -221,7 +216,6 @@ func (g grpcService) Export(_ context.Context, req *coltrace.ExportTraceServiceR
 	return &coltrace.ExportTraceServiceResponse{}, nil
 }
 
-// ServeGRPC serves the OTLP trace service on l until it is closed.
 func (rc *Receiver) ServeGRPC(l net.Listener) error {
 	s := grpc.NewServer(grpc.MaxRecvMsgSize(maxBody))
 	coltrace.RegisterTraceServiceServer(s, grpcService{rc: rc})

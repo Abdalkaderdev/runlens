@@ -1,5 +1,3 @@
-// Package server wires the OTLP receiver, JSON API, live stream, MCP
-// endpoint and embedded UI onto one HTTP handler.
 package server
 
 import (
@@ -66,8 +64,6 @@ func (s *Server) Handler() http.Handler {
 	return localOnly(http.NewCrossOriginProtection().Handler(m))
 }
 
-// localOnly rejects requests whose Host is not a loopback name, which blocks
-// DNS-rebinding attacks against the local API.
 func localOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		host, _, err := net.SplitHostPort(r.Host)

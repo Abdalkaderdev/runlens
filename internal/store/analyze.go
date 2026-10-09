@@ -182,8 +182,6 @@ func depKey(s *Span) (string, string) {
 	return "http:" + peer, peer
 }
 
-// NPlusOne reports query shapes executed at least NPlusOneMin times in one
-// trace.
 func (o Options) NPlusOne(spans []*Span) []Finding {
 	groups := map[string]*Finding{}
 	var keys []string
@@ -329,7 +327,6 @@ type Endpoint struct {
 	Hints          []string  `json:"hints"`
 }
 
-// Endpoints aggregates request summaries per endpoint, slowest p95 first.
 func (o Options) Endpoints(traces [][]*Span, since time.Time) []Endpoint {
 	type acc struct {
 		e     Endpoint
@@ -433,7 +430,6 @@ type ErrorItem struct {
 	Stack    string  `json:"stack,omitempty"`
 }
 
-// Errors lists failed spans that started after since, newest first.
 func (o Options) Errors(traces [][]*Span, since time.Time) []ErrorItem {
 	var out []ErrorItem
 	for _, t := range traces {
@@ -481,7 +477,6 @@ type Edge struct {
 	AvgMs    float64 `json:"avgMs"`
 }
 
-// ServiceMap lists which endpoints call which databases and external hosts.
 func (o Options) ServiceMap(traces [][]*Span) []Edge {
 	idx := map[string]*Edge{}
 	var keys []string

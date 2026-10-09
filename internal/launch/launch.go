@@ -1,5 +1,3 @@
-// Package launch prepares the environment that makes a child process export
-// OpenTelemetry traces to runlens without changes to its code.
 package launch
 
 import (
@@ -48,7 +46,6 @@ func base(cmd string) string {
 	return b
 }
 
-// Detect guesses the runtime from the command name.
 func Detect(argv []string) Runtime {
 	if len(argv) == 0 {
 		return None
@@ -72,8 +69,6 @@ type Config struct {
 	Log      io.Writer
 }
 
-// Env returns the variables to add to the child environment, installing the
-// instrumentation packages into CacheDir on first use.
 func Env(c Config) ([]string, error) {
 	env := map[string]string{
 		"OTEL_EXPORTER_OTLP_ENDPOINT": c.Endpoint,
@@ -193,8 +188,6 @@ func setupPython(c Config) (boot, site string, err error) {
 
 const probe = "import sys; print(sys.executable); print('%d.%d' % sys.version_info[:2])"
 
-// findPython locates the interpreter the command will run under, so the
-// instrumentation is installed for the matching Python version.
 func findPython(argv []string) (exe, ver string, err error) {
 	var tries [][]string
 	b := base(argv[0])

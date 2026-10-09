@@ -84,10 +84,6 @@ func (s *Span) Int(keys ...string) int {
 	return 0
 }
 
-// Classify derives Type, DB and peer fields from semantic-convention
-// attributes, accepting both the legacy and the stable attribute names.
-// With redact set, SQL literals, db parameters, auth headers and URL query
-// values are scrubbed from the stored attributes.
 func (s *Span) Classify(redact bool) {
 	s.DBSystem = s.Str("db.system.name", "db.system")
 	switch {

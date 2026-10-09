@@ -1,4 +1,3 @@
-// Package mcpserver exposes captured traces to coding agents over MCP.
 package mcpserver
 
 import (
@@ -11,7 +10,6 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// Source returns the captured traces, newest first.
 type Source func(context.Context) ([][]*store.Span, error)
 
 type ListIn struct {

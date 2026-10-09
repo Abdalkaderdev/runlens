@@ -1,4 +1,3 @@
-// Package ui holds the built web UI. Rebuild it with `npm run build` in ui/.
 package ui
 
 import (

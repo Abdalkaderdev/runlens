@@ -11,8 +11,6 @@ type Trace struct {
 	seen  map[string]bool
 }
 
-// Store keeps the most recent traces in memory. When more than Cap traces
-// are held the oldest is evicted.
 type Store struct {
 	Cap int
 
@@ -26,8 +24,6 @@ func New(capacity int) *Store {
 	return &Store{Cap: capacity, traces: map[string]*Trace{}, subs: map[chan []string]struct{}{}}
 }
 
-// Add merges spans into their traces and notifies subscribers with the IDs
-// of the traces that changed.
 func (s *Store) Add(spans []*Span) {
 	if len(spans) == 0 {
 		return
@@ -91,7 +87,6 @@ func (s *Store) Subscribe() (<-chan []string, func()) {
 	}
 }
 
-// Trace returns a copy of the span list for one trace.
 func (s *Store) Trace(id string) []*Span {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -102,7 +97,6 @@ func (s *Store) Trace(id string) []*Span {
 	return append([]*Span(nil), t.Spans...)
 }
 
-// Traces returns all traces, newest first.
 func (s *Store) Traces() [][]*Span {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -113,8 +107,6 @@ func (s *Store) Traces() [][]*Span {
 	return out
 }
 
-// Spans returns every span, oldest trace first, so that adding them to an
-// empty store reproduces the same trace order.
 func (s *Store) Spans() []*Span {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
