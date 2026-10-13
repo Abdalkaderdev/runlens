@@ -5,6 +5,7 @@ See what your dev server actually does: live traces, a service map, N+1 queries 
 [![ci](https://github.com/Abdalkaderdev/runlens/actions/workflows/ci.yml/badge.svg)](https://github.com/Abdalkaderdev/runlens/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/Abdalkaderdev/runlens.svg)](https://pkg.go.dev/github.com/Abdalkaderdev/runlens)
 [![License: MIT](https://img.shields.io/badge/license-MIT-f44e00.svg)](LICENSE)
+[![M8ven Score](https://m8ven.ai/badge/mcp/abdalkaderdev-runlens-itwg0w?v=2e9ab435bbec2bc521ec5c7034717d29)](https://m8ven.ai/mcp/abdalkaderdev-runlens-itwg0w?s=readme)
 
 ```sh
 runlens npm run dev
