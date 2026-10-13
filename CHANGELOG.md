@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `runlens agents`: live view of Claude Code sessions and subagents read from their transcripts, with a fleet map, per-agent timeline and diffs, file collisions and a claim check of final reports.
+- `GET /api/agents` and `GET /api/agents/{session}/{agent}`.
+- MCP tools `agents_status` and `agent_detail`, over HTTP and stdio.
+- `--agents-root` and `--agents-since` flags.
+
 ## [0.1.0] - 2026-10-10
 
 ### Added

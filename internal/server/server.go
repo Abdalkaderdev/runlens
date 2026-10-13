@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Abdalkaderdev/runlens/internal/agents"
 	"github.com/Abdalkaderdev/runlens/internal/otlp"
 	"github.com/Abdalkaderdev/runlens/internal/store"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -31,6 +32,7 @@ type Server struct {
 	MCP      *mcp.Server
 	UI       fs.FS
 	Version  string
+	Agents   *agents.Watcher
 
 	mu  sync.Mutex
 	app App
@@ -54,6 +56,8 @@ func (s *Server) Handler() http.Handler {
 	m.HandleFunc("GET /api/endpoints", s.endpoints)
 	m.HandleFunc("GET /api/export", s.export)
 	m.HandleFunc("GET /api/stream", s.stream)
+	m.HandleFunc("GET /api/agents", s.agentList)
+	m.HandleFunc("GET /api/agents/{session}/{agent}", s.agentDetail)
 	m.HandleFunc("POST /api/clear", func(w http.ResponseWriter, r *http.Request) {
 		s.Store.Clear()
 		w.WriteHeader(http.StatusNoContent)
@@ -142,6 +146,27 @@ func (s *Server) trace(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) endpoints(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, s.Opt.Endpoints(s.Store.Traces(), time.Time{}))
+}
+
+func (s *Server) agentList(w http.ResponseWriter, r *http.Request) {
+	if s.Agents == nil {
+		writeJSON(w, agents.Snapshot{Sessions: []agents.Session{}, Collisions: []agents.Collision{}})
+		return
+	}
+	writeJSON(w, s.Agents.Snapshot())
+}
+
+func (s *Server) agentDetail(w http.ResponseWriter, r *http.Request) {
+	if s.Agents == nil {
+		http.Error(w, "agent tracking is off", http.StatusNotFound)
+		return
+	}
+	d, ok := s.Agents.Detail(r.PathValue("session"), r.PathValue("agent"))
+	if !ok {
+		http.Error(w, "agent not found", http.StatusNotFound)
+		return
+	}
+	writeJSON(w, d)
 }
 
 func (s *Server) export(w http.ResponseWriter, r *http.Request) {

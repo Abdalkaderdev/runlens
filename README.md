@@ -30,6 +30,7 @@ runlens puts OpenTelemetry in front of the dev command you already use, keeps th
 - **Hints.** Slow queries, database-bound endpoints, outbound calls that could run concurrently, p95 over budget.
 - **Redacted by default.** SQL literals, DB parameters, auth headers and query-string values are scrubbed before storage.
 - **MCP server.** `list_requests`, `get_trace`, `slowest_endpoints`, `find_n_plus_one`, `errors_since` and `service_map` over streamable HTTP or stdio.
+- **Agents mode.** `runlens agents` watches your Claude Code sessions and their subagents: a live fleet map, each agent's tool calls and diffs, files two agents both edited, and a claim check that marks "tests pass" or "pushed" in a final report as supported, stale, contradicted or unverified.
 - **Any OTLP source.** Already exporting OpenTelemetry? Point it at runlens. OTLP/HTTP (protobuf and JSON) and OTLP/gRPC.
 - **One binary.** Go, UI embedded, loopback only, no database.
 
@@ -58,6 +59,24 @@ Already emitting OTLP, or using another language? Start runlens on its own and p
 runlens
 OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4318 OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf ./your-app
 ```
+
+### Watch your coding agents
+
+```sh
+runlens agents
+runlens agents --agents-since 6h
+```
+
+![Agents mode: fleet map and agent list](docs/media/agents.png)
+
+runlens tails the transcripts Claude Code writes under `~/.claude/projects` and opens `/agents.html`. For each session you get:
+
+- **Fleet map.** The main session and every subagent, sorted running, stalled, idle, done. Running edges animate; an agent that has not finished and has been silent for 10 minutes turns stalled.
+- **Agent list and drawer.** Tool calls, errors, edits, tokens and the last action. Open one for its final report, the files it edited and a timeline with each command, its output and each edit as a diff.
+- **File collisions.** Files edited by two or more agents in the same session.
+- **Claim check.** Claims in a final report such as tests pass, typecheck clean, build ok, lint clean, committed or pushed are matched against the commands the agent actually ran. A claim with no matching command is unverified, one whose latest matching command failed is contradicted, and one whose last passing run came before the last file edit is stale.
+
+The watcher only reads the transcript files. It never writes to them or talks to the agents. It also runs in the normal `runlens <cmd>` mode, so the Agents tab is always there.
 
 ### Try the examples
 
@@ -134,6 +153,8 @@ Tools:
 | `find_n_plus_one` | Repeated query shapes per endpoint with worst count and an example trace. |
 | `errors_since` | Exceptions, error spans and 5xx in a window (`since`: `10m` or RFC3339). |
 | `service_map` | Endpoint to database and external host edges with call counts and latency. |
+| `agents_status` | Claude Code sessions and subagents on this machine: status, last action, tool calls, errors, edits, token burn and file collisions. |
+| `agent_detail` | One agent's recent tool calls, edited files and results, plus the claim check of its final report. |
 
 ### Claude Code
 
@@ -198,6 +219,8 @@ Flags go before the command: `runlens --slow 300ms npm run dev`.
 | `--capacity` | `2000` | Traces kept in memory. |
 | `--runtime` | `auto` | `node`, `python` or `none` to override detection. |
 | `--service` | directory name | `OTEL_SERVICE_NAME` for the child, unless already set. |
+| `--agents-root` | `~/.claude/projects` | Claude Code transcripts folder to watch. |
+| `--agents-since` | `12h` | Only show agent sessions active within this window. |
 
 Your own `OTEL_*` variables are respected, except the exporter endpoint, protocol and traces exporter, which runlens sets.
 

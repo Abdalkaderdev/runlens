@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="color-scheme" content="dark light" />
+    <title>runlens agents</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0a0a'/%3E%3Ccircle cx='16' cy='16' r='7' fill='none' stroke='%23f44e00' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='2.5' fill='%23f44e00'/%3E%3C/svg%3E" />
+    <script>
+      try { const t = localStorage.getItem('runlens-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+    </script>
+  </head>
+  <body class="agents-page">
+    <a class="skip" href="#agent-list">Skip to agents</a>
+    <header class="bar">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"></span>
+        <span class="word">runlens</span>
+      </div>
+      <nav class="tabs" aria-label="Views">
+        <a href="/">Traces</a>
+        <a href="/agents.html" aria-current="page">Agents</a>
+      </nav>
+      <dl class="stats" id="stats"></dl>
+      <div class="actions">
+        <button class="btn ghost icon" id="theme" type="button" aria-label="Toggle light and dark theme">
+          <span class="theme-glyph" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+    <div class="sessions" id="sessions" role="tablist" aria-label="Sessions"></div>
+    <main class="ag-layout">
+      <section class="ag-left">
+        <div class="fleet-wrap">
+          <svg id="fleet" class="fleet" role="img" aria-label="Fleet map of the session and its agents"></svg>
+          <div class="legend" aria-hidden="true">
+            <span><i class="lg-dot run"></i>running</span>
+            <span><i class="lg-dot"></i>done</span>
+            <span><i class="lg-dot idle"></i>idle</span>
+            <span><i class="lg-dot err"></i>stalled</span>
+          </div>
+        </div>
+        <section class="panel" aria-labelledby="collisions-h">
+          <h2 id="collisions-h" class="ph">File collisions</h2>
+          <div id="collisions"></div>
+        </section>
+      </section>
+      <section class="ag-right">
+        <div class="list-head">
+          <h2 class="ph" id="agent-list">Agents</h2>
+          <div class="chips" id="filters" role="group" aria-label="Filter by status"></div>
+        </div>
+        <div class="table-wrap">
+          <table class="table agents" aria-labelledby="agent-list">
+            <thead><tr><th>Agent</th><th class="r">Calls</th><th class="r">Edits</th><th class="r">Tokens</th><th>Last action</th><th class="r">Seen</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <aside class="drawer" id="drawer" hidden aria-label="Agent detail"></aside>
+      </section>
+    </main>
+    <script type="module" src="/src/agents.ts"></script>
+  </body>
+</html>

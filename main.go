@@ -18,6 +18,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Abdalkaderdev/runlens/internal/agents"
 	"github.com/Abdalkaderdev/runlens/internal/launch"
 	"github.com/Abdalkaderdev/runlens/internal/mcpserver"
 	"github.com/Abdalkaderdev/runlens/internal/otlp"
@@ -34,6 +35,7 @@ const usage = `runlens: live traces, service map and MCP for your local dev serv
 Usage:
   runlens [flags] <command> [args...]   run a dev server under runlens
   runlens [flags]                       only receive OTLP from apps you start yourself
+  runlens agents [flags]                watch your coding agents: fleet map, diffs, collisions, claim check
   runlens mcp [--url URL]               MCP over stdio, backed by a running runlens
   runlens version
 
@@ -41,6 +43,7 @@ Examples:
   runlens npm run dev
   runlens node server.js
   runlens uvicorn main:app --reload
+  runlens agents --since 6h
 
 Flags:
 `
@@ -50,12 +53,14 @@ func main() {
 		switch os.Args[1] {
 		case "mcp":
 			os.Exit(runMCP(os.Args[2:]))
+		case "agents":
+			os.Exit(run(os.Args[2:], true))
 		case "version", "--version", "-v":
 			fmt.Println("runlens", version)
 			return
 		}
 	}
-	os.Exit(run())
+	os.Exit(run(os.Args[1:], false))
 }
 
 func cacheDir() string {
@@ -66,7 +71,7 @@ func cacheDir() string {
 	return filepath.Join(d, "runlens")
 }
 
-func run() int {
+func run(args []string, agentsMode bool) int {
 	fs := flag.NewFlagSet("runlens", flag.ExitOnError)
 	fs.Usage = func() { fmt.Fprint(os.Stderr, usage); fs.PrintDefaults() }
 	port := fs.Int("port", 4318, "HTTP port for the UI, API, MCP and OTLP/HTTP; falls back to a free port if taken")
@@ -79,14 +84,23 @@ func run() int {
 	capacity := fs.Int("capacity", 2000, "traces kept in memory")
 	rt := fs.String("runtime", "auto", "instrumentation to inject: auto, node, python or none")
 	service := fs.String("service", "", "service name (default: current directory name)")
-	fs.Parse(os.Args[1:])
+	agentRoot := fs.String("agents-root", agents.DefaultRoot(), "Claude Code projects folder to watch for agent transcripts")
+	agentSince := fs.Duration("agents-since", 12*time.Hour, "only show agent sessions active within this window")
+	fs.Parse(args)
 	argv := fs.Args()
+	if agentsMode {
+		argv = nil
+	}
 
 	opt := store.Options{NPlusOneMin: *n1, SlowMs: ms(*slow), SlowQueryMs: ms(*slowQuery)}
 	st := store.New(*capacity)
 	rc := &otlp.Receiver{Store: st, Redact: !*showValues}
 	src := func(context.Context) ([][]*store.Span, error) { return st.Traces(), nil }
-	srv := &server.Server{Store: st, Opt: opt, Receiver: rc, MCP: mcpserver.New(src, opt, version), UI: ui.FS(), Version: version}
+	aw := agents.New(*agentRoot, *agentSince)
+	go aw.Run(make(chan struct{}), 2*time.Second)
+	mcpSrv := mcpserver.New(src, opt, version)
+	agents.Register(mcpSrv, aw)
+	srv := &server.Server{Store: st, Opt: opt, Receiver: rc, MCP: mcpSrv, UI: ui.FS(), Version: version, Agents: aw}
 
 	ln, err := listen(*port)
 	if err != nil {
@@ -108,7 +122,11 @@ func run() int {
 	fmt.Fprintf(os.Stderr, "\n  runlens %s\n  ui    %s\n  mcp   %s/mcp\n  otlp  %s (http)  %s (grpc)\n\n", version, base, base, base, grpcAddr)
 
 	if !*noOpen && os.Getenv("CI") == "" {
-		openBrowser(base)
+		if agentsMode {
+			openBrowser(base + "/agents.html")
+		} else {
+			openBrowser(base)
+		}
 	}
 
 	sig := make(chan os.Signal, 1)
@@ -244,7 +262,11 @@ func runMCP(args []string) int {
 		}
 		res.Body.Close()
 	}
-	if err := mcpserver.New(src, opt, version).Run(context.Background(), &mcp.StdioTransport{}); err != nil {
+	aw := agents.New(agents.DefaultRoot(), 12*time.Hour)
+	go aw.Run(make(chan struct{}), 2*time.Second)
+	srv := mcpserver.New(src, opt, version)
+	agents.Register(srv, aw)
+	if err := srv.Run(context.Background(), &mcp.StdioTransport{}); err != nil {
 		fmt.Fprintln(os.Stderr, "runlens mcp:", err)
 		return 1
 	}

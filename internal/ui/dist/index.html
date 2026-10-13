@@ -10,8 +10,9 @@
     <script>
       try { const t = localStorage.getItem('runlens-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
     </script>
-    <script type="module" crossorigin src="/assets/index-Cx1k1BWg.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-vbu79x8z.css">
+    <script type="module" crossorigin src="/assets/main-tgSx9JF6.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/jetbrains-mono-latin-wght-normal-C74WCdWj.js">
+    <link rel="stylesheet" crossorigin href="/assets/jetbrains-mono-latin-wght-normal-DUyawF9x.css">
   </head>
   <body>
     <a class="skip" href="#requests">Skip to requests</a>
@@ -20,6 +21,10 @@
         <span class="mark" aria-hidden="true"></span>
         <span class="word">runlens</span>
       </div>
+      <nav class="tabs" aria-label="Views">
+        <a href="/" aria-current="page">Traces</a>
+        <a href="/agents.html">Agents</a>
+      </nav>
       <div class="app" id="app" translate="no"></div>
       <dl class="stats" id="stats"></dl>
       <div class="actions">

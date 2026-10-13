@@ -1068,3 +1068,34 @@ td a:focus-visible {
     transition: none !important;
   }
 }
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-left: 18px;
+}
+
+.tabs a {
+  padding: 5px 10px;
+  border-radius: var(--r-sm);
+  font: 500 12.5px var(--sans);
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.tabs a:hover {
+  color: var(--text);
+  background: var(--raise);
+}
+
+.tabs a[aria-current='page'] {
+  color: var(--text);
+  background: var(--raise);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+@media (max-width: 980px) {
+  .tabs {
+    display: none;
+  }
+}
