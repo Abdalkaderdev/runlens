@@ -64,7 +64,8 @@ func New(src Source, opt store.Options, version string) *mcp.Server {
 	s := mcp.NewServer(&mcp.Implementation{Name: "runlens", Version: version}, &mcp.ServerOptions{
 		Instructions: "runlens records live traces from the local dev server it launched. Use list_requests or slowest_endpoints first, then get_trace for span-level detail. SQL literals are redacted.",
 	})
-	ro := &mcp.ToolAnnotations{ReadOnlyHint: true}
+	no := false
+	ro := &mcp.ToolAnnotations{ReadOnlyHint: true, DestructiveHint: &no, IdempotentHint: true, OpenWorldHint: &no}
 
 	mcp.AddTool(s, &mcp.Tool{Name: "list_requests", Annotations: ro, Description: "Recent inbound HTTP requests, newest first, with status, duration, DB and outbound call counts."},
 		func(ctx context.Context, _ *mcp.CallToolRequest, in ListIn) (*mcp.CallToolResult, any, error) {

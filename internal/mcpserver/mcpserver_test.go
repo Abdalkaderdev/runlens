@@ -73,6 +73,10 @@ func TestTools(t *testing.T) {
 	var names []string
 	for _, tl := range tools.Tools {
 		names = append(names, tl.Name)
+		a := tl.Annotations
+		if a == nil || !a.ReadOnlyHint || !a.IdempotentHint || a.DestructiveHint == nil || *a.DestructiveHint || a.OpenWorldHint == nil || *a.OpenWorldHint {
+			t.Fatalf("%s: all four tool hints must be set explicitly, got %+v", tl.Name, a)
+		}
 	}
 	if got := strings.Join(names, ","); !strings.Contains(got, "list_requests") || len(names) != 6 {
 		t.Fatalf("tools = %s", got)
